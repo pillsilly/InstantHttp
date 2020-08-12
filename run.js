@@ -4,21 +4,22 @@ const cors = require('cors');
 const path = require('path')
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
-var compression = require('compression');
+const compression = require('compression');
+
 module.exports = function run({port = 9090, dir = process.cwd()}) {
     const app = express();
     const router = express.Router();
     router.get('/*', function (req, res, next) {
-        console.log(`incoming: ${req.originalUrl}`);
+        console.log(`Incoming request: ${req.originalUrl}`);
         next();
     });
     function _400handler (err, req, res, next) {
         console.error(err.stack)
         res.status(404).send('404!')
     }
-    console.log(`server dir is [${dir}]`);
+    console.log(`Serving dir [${dir}]`);
     app.use([cors(), compression(), router, express.static(dir), _400handler]);
-    console.log(`server is on, port ${port}`);
+    console.log(`Serving on port ${port}`);
 
     app.use(function (req, res, next) {
         const testFilePath = path.resolve(`${dir}${req.url}`);
@@ -55,7 +56,7 @@ module.exports = function run({port = 9090, dir = process.cwd()}) {
         console.log('failed to launch chrome, pls start chrome with the flag \'--disable-web-security\' manually.', e);
     }).then(() => {
         process.on('exit', (code) => {
-            console.log(`exiting, kill all launched chrome`);
+            console.log(`Exit and kill launched chrome`);
             ChromeLauncher.killAll();
         })
     });

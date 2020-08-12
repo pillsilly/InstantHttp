@@ -1,7 +1,7 @@
 **usage**: 
 
 ```bash
-./httpoutofthebox.exe --port=9092 --dir=C:\repo\httpserver\public
+./instantHttp.exe --port=9092 --dir=C:\repo\httpserver\public
 ```
 
 **build**: 
@@ -10,7 +10,7 @@ npm run-script build
 ```
 or
 ```bash
-pkg . --targets=host --output httpoutofthebox.exe
+pkg . --targets=host --output instantHttp.exe
 ``` 
 
 **if you're attempting to connect eNB this way, you need to disable chrome sandbox in order to break cross origin limitation**:

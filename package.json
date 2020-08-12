@@ -1,10 +1,10 @@
 {
-  "name": "http-ready",
+  "name": "instantHttp",
   "version": "1.0.0",
   "description": "",
   "bin": "bin.js",
   "scripts": {
-    "build": "pkg . --targets=host --output httpoutofthebox.exe"
+    "build": "pkg . --targets=host --output instantHttp.exe"
   },
   "author": "",
   "license": "MIT",
@@ -12,6 +12,7 @@
     "chrome-launcher": "^0.13.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "pkg": "^4.4.9"
   }
 }
