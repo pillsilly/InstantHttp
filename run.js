@@ -5,9 +5,13 @@ const path = require('path')
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
 const compression = require('compression');
-
-module.exports = function run({port = 9090, dir = process.cwd()}) {
+// const target = 'https://confluence.ext.net.nokia.com/'
+module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget = '', proxyPattern = ''}) {
     const app = express();
+    if (proxyTarget && proxyPattern) { 
+        const {createProxyMiddleware} = require('http-proxy-middleware');
+        app.use(proxyPattern, createProxyMiddleware({ target: proxyTarget, changeOrigin: true, secure: false }));
+    }
     const router = express.Router();
     router.get('/*', function (req, res, next) {
         console.log(`Incoming request: ${req.originalUrl}`);

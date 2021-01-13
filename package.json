@@ -13,6 +13,7 @@
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "http-proxy-middleware": "^1.0.6",
     "pkg": "^4.4.9"
   }
 }
