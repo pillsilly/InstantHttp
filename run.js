@@ -6,9 +6,9 @@ const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
 const compression = require('compression');
 // const target = 'https://confluence.ext.net.nokia.com/'
-module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget = '', proxyPattern = ''}) {
+module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget, proxyPattern, open = true}) {
     const app = express();
-    if (proxyTarget && proxyPattern) { 
+    if (proxyTarget && proxyPattern) {
         const {createProxyMiddleware} = require('http-proxy-middleware');
         app.use(proxyPattern, createProxyMiddleware({ target: proxyTarget, changeOrigin: true, secure: false }));
     }
@@ -29,7 +29,7 @@ module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget = '
         const testFilePath = path.resolve(`${dir}${req.url}`);
 
         fs.readdir(testFilePath, { withFileTypes: true }, (a, list) => {
-            if (!list) { 
+            if (!list) {
                 res.status(404).send(`resource not found: ${testFilePath}`);
                 return;
             };
@@ -37,7 +37,7 @@ module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget = '
             const html = title + list
                 .map(f => f.name)
                 .map(name => `<a href='${name}'>${name}</a>`).join('<br>');
-            
+
             res.setHeader('Content-Type', 'text/html; charset=UTF-8');
             res.status(200).send(html);
         });
@@ -53,6 +53,7 @@ module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget = '
         }
     });
 
+  if (open !== true) return;
     ChromeLauncher.launch({
         startingUrl: `http://127.0.0.1:${port}/`,
         chromeFlags: ['--disable-web-security']
