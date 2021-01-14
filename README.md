@@ -26,3 +26,8 @@ or
 pkg . --targets=host --output instantHttp.exe
 ``` 
  
+example
+
+```bash
+node bin.js --open=false --port=8080 --proxyTarget=http://baidu.com --proxyPattern=/proxy
+````
