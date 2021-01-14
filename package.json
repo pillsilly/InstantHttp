@@ -1,5 +1,5 @@
 {
-  "name": "instant_http",
+  "name": "instantly_http",
   "version": "1.0.0",
   "description": "",
   "bin": "bin.js",
