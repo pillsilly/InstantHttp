@@ -5,7 +5,7 @@ const path = require('path')
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
 const compression = require('compression');
-// const target = 'https://confluence.ext.net.nokia.com/'
+
 module.exports = function run({port = 9090, dir = process.cwd(), proxyTarget, proxyPattern, open = true}) {
     const app = express();
     if (proxyTarget && proxyPattern) {
