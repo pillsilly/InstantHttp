@@ -1,33 +1,26 @@
-**Usage**: 
-- For common user:
-	- Option 1: 
-	> Just click the downloaded exe file.(in this way everything will be run with default options as no options were passed)
-	
-	- Option 2:
-    > execute the exe file via cmd so you would have a chance to pass additional options to the application, just like below example.
-    
-    `./instantHttp.exe --port=9092 --dir=C:\`
-		
-- For user who has NodeJS environment ready
-	```bash
-	// npm instal(of course)
-	npm i -g https://github.com/pillsilly/InstantHttp
-	
-	// then run script(might need to restart the terminal to recognize the added command)
-	InstantHttp
-	```
-	
-**To build executable binary(exe)**: 
-```bash
-npm run-script build
-```
-or
-```bash
-pkg . --targets=host --output instantHttp.exe
-``` 
- 
-example
+## How to run
 
-```bash
-node bin.js --open=false --port=8080 --proxyTarget=http://baidu.com --proxyPattern=/proxy
-````
+**Examples**:
+
+- In repository:
+	```bash
+	node bin.js --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+	````
+	> This is going to serve the current dir `./` with local port 8080, while all the request under /prox would be redirected to http://google.com
+
+- Using under NodeJS-ready environment.
+	```bash
+	instant_http --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+	```
+	> `npm -g instant_http` is required before that.
+
+- Using binary
+	```bash
+	./instantHttp  --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+	```
+	> Check the section [Build](##Build) to know how to get a executable binary
+
+## Build
+- > [pkg](https://www.npmjs.com/package/pkg) is used as the package utility, please check pkg's document in order to build runnable binaries as you want.
+
+ 

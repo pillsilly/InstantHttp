@@ -1,15 +1,15 @@
 {
-  "name": "instantHttp",
+  "name": "instant_http",
   "version": "1.0.0",
   "description": "",
   "bin": "bin.js",
   "scripts": {
-    "build": "pkg . --targets=host --output instantHttp.exe"
+    "build": "pkg . --targets=host --output instantHttp"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "chrome-launcher": "^0.13.0",
+    "chrome-launcher": "^0.13.4",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.17.1",
