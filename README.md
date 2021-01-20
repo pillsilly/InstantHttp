@@ -13,12 +13,12 @@
 - proxyPattern
   - Default: undefined
   - Example: --proxyPattern=/proxy
-  - Explain: A pattern to be used as to find determinate which request to redirect to redirect to `proxyTarget`.
+  - Explain: Which pattern to be used as to determinate which request to `proxyTarget`.
   - 
 - proxyTarget
   - Default: undefined
   - Example: --proxyTarget=http://google.com
-  - Explain: To point which target to redirect when request path matches with `proxyPattern`.
+  - Explain: Which target to redirect when request path matches with `proxyPattern`.
 
 - open
   - Default: true
@@ -32,7 +32,7 @@
 	```bash
 	node bin.js --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
 	````
-	> This is going to serve the current dir `./` with local port 8080, while all the request under /prox would be redirected to http://google.com
+	> This is going to serve the current dir `./` with local port 8080, while all the request under `/proxy` would be redirected to http://google.com
 
 - Using under NodeJS-ready environment
 	```bash
@@ -49,5 +49,9 @@
 
 ## Build
 - > [pkg](https://www.npmjs.com/package/pkg) is used as the package utility, please check pkg's document in order to build runnable binaries as you want.
-
- 
+  ```bash
+  # e.g
+  npx pkg . --targets=host --output instantHttp
+  # or
+  npm run buld
+  ```

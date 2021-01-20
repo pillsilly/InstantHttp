@@ -1,7 +1,7 @@
 {
   "name": "instantly_http",
   "version": "1.0.0",
-  "description": "",
+  "description": "Tool to instantly create your own http server for development-use",
   "bin": "bin.js",
   "scripts": {
     "build": "pkg . --targets=host --output instantHttp"
@@ -15,5 +15,7 @@
     "express": "^4.17.1",
     "http-proxy-middleware": "^1.0.6",
     "pkg": "^4.4.9"
-  }
+  },
+  "keywords": ["http","server","cli","serve","development","tool", "http server"],
+  "homepage": "https://github.com/pillsilly/InstantHttp",
 }
