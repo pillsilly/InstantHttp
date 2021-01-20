@@ -17,5 +17,5 @@
     "pkg": "^4.4.9"
   },
   "keywords": ["http","server","cli","serve","development","tool", "http server"],
-  "homepage": "https://github.com/pillsilly/InstantHttp",
+  "homepage": "https://github.com/pillsilly/InstantHttp"
 }
