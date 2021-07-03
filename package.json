@@ -4,6 +4,7 @@
   "description": "Tool to instantly create your own http server for development-use",
   "bin": "bin.js",
   "scripts": {
+    "release": "release-it",
     "build": "pkg . --targets=host --output instantHttp"
   },
   "author": "",

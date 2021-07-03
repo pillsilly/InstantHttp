@@ -5,8 +5,9 @@ const path = require('path')
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
 const compression = require('compression');
-
+const packagejson = require('package')
 module.exports = function run({ port = 9090, dir = process.cwd(), proxyTarget, proxyPattern, open = true }) {
+    console.log(`Version: ${packagejson.version}`)
     const app = express();
     if (proxyTarget && proxyPattern) {
         const { createProxyMiddleware } = require('http-proxy-middleware');
