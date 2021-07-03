@@ -16,6 +16,17 @@
     "http-proxy-middleware": "^1.0.6",
     "pkg": "^4.4.9"
   },
-  "keywords": ["http","server","cli","serve","development","tool", "http server"],
-  "homepage": "https://github.com/pillsilly/InstantHttp"
+  "keywords": [
+    "http",
+    "server",
+    "cli",
+    "serve",
+    "development",
+    "tool",
+    "http server"
+  ],
+  "homepage": "https://github.com/pillsilly/InstantHttp",
+  "devDependencies": {
+    "release-it": "^14.10.0"
+  }
 }
