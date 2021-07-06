@@ -30,13 +30,13 @@
 
 - In repository
 	```bash
-	node bin.js --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+	node bin.js --open=false --port=8080 --proxyTarget=http://proxy-server:8080 --proxyPattern=/api/*
 	````
 	> This is going to serve the current dir `./` with local port 8080, while all the request under `/proxy` would be redirected to http://google.com
 
 - Using under NodeJS-ready environment
 	```bash
-	instant_http --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+	instant_http --open=false --port=8080 --proxyTarget=http://proxy-server:8080 --proxyPattern=/api/*
 	```
 	> `npm -g instant_http` is required before that.
 
