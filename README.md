@@ -1,3 +1,7 @@
+## General introduction
+>With this tool it becomes possible to start a http server instantly via command-line.
+It provides you ability to test single page application or static web files with a real http server with tiny effort.
+
 ## Options
 
 - port
@@ -24,6 +28,21 @@
   - Default: true
   - Example: --open=false
   - Explain: If not set (true) then the application will try to launch your Chrome installed with the server address`e.g http://localhost:9090`.
+
+- mode
+  - Default: NORMAL
+  - Example: --mode=SPA
+  - Explain: "NORMAL" mode works most likely a http file explorer, it provides very basic function for like list files and resource existence check.
+             "SPA" mode works just like your real SPA http server, that it will redirect request to specific default resource (index.html) if given resource url is not found.
+- indexFile
+  - Default: index.html
+  - Example: --indexFile=myindex.html
+  - Explain: See "mode" options.
+  
+- quiet
+  - Default: true
+  - Example: --quiet=false
+  - Explain: Setting it to false then you will see more debug outputs.  
 
 ## How to run
 **Examples**:
