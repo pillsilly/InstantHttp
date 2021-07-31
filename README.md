@@ -23,7 +23,7 @@
 - open
   - Default: true
   - Example: --open=false
-  - Explain: If not set (trure) then the application will try to launch your Chrome installed with the server address`e.g http://localhost:9090`.
+  - Explain: If not set (true) then the application will try to launch your Chrome installed with the server address`e.g http://localhost:9090`.
 
 ## How to run
 **Examples**:
@@ -44,7 +44,7 @@
 	```bash
 	./instantHttp  --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
 	```
-	> Check the section [Build](##Build) to know how to get a executable binary
+	> Check the section [Build](#Build) to know how to get an executable binary
 
 
 ## Build
