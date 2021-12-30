@@ -9,7 +9,7 @@
     "release": "release-it",
     "build": "pkg . --targets=host --output instantHttp"
   },
-  "author": "",
+  "author": "pillsilly",
   "license": "MIT",
   "dependencies": {
     "chrome-launcher": "^0.13.4",
