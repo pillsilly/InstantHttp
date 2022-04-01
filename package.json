@@ -6,8 +6,8 @@
   "main": "./src/run.js",
   "scripts": {
     "test": "npx jest ",
-    "release": "release-it",
-    "build": "pkg . --targets=host --output instantHttp"
+    "release": "npx release-it",
+    "build": "pkg . --targets=host --output instantHttp --compress=Brotli --no-bytecode  --public-packages=* --outputPath=dist"
   },
   "author": "pillsilly",
   "license": "MIT",
