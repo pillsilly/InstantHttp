@@ -10,15 +10,15 @@ module.exports = MODE = {
   SPA: 'SPA',
 };
 module.exports = function run({
-  port = 9090,
-  dir = process.cwd(),
+  port,
+  dir,
   proxyTarget,
   proxyPattern,
-  open = false,
-  mode = MODE.NORMAL,
-  indexFile = 'index.html',
-  quiet = true
-} = {}) {
+  open,
+  mode,
+  indexFile,
+  quiet
+} ) {
   console.log(`Version: ${version}`);
   const app = express();
   if (proxyTarget && proxyPattern) {
