@@ -1,24 +1,28 @@
-const express = require('express');
+import path from 'path';
+import express from "express";
 const cors = require('cors');
-const path = require('path');
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
 const compression = require('compression');
 const {version} = require('../package.json');
-module.exports = MODE = {
+const MODE = {
   NORMAL: 'NORMAL',
   SPA: 'SPA',
 };
-module.exports = function run({
-  port,
-  dir,
-  proxyTarget,
-  proxyPattern,
-  open,
-  mode,
-  indexFile,
-  quiet
-} ) {
+const defaultArguments = {
+  port: '9090',
+  dir: process.cwd(),
+  open: false,
+  mode: MODE.NORMAL,
+  indexFile: 'index.html',
+  quiet: true,
+  proxyTarget: '',
+  proxyPattern: ''
+}
+
+function run(args: Partial<typeof defaultArguments> = {}) {
+  args = Object.assign({...defaultArguments}, args);
+  const {port, dir, proxyTarget, proxyPattern, open, mode, indexFile, quiet} = args;
   console.log(`Version: ${version}`);
   const app = express();
   if (proxyTarget && proxyPattern) {
@@ -46,39 +50,52 @@ module.exports = function run({
     throw Error(`Dir [${dir}] does not exit`);
   }
 
-  app.use([
-    cors(),
-    compression(),
-    router,
-    express.static(dir),
-    mode === MODE.SPA ? handleSPA({dir, indexFile}) : handle404,
-  ]);
+  if(mode === exports.MODE.SPA) {
+    app.use([
+      cors(),
+      compression(),
+      router,
+      express.static(dir),
+      handleSPA({dir, indexFile}),
+    ]);
+  } else {
+    app.use([
+      cors(),
+      compression(),
+      router,
+      express.static(dir),
+      function (req: any, res: any) {
+        const requestPath = path.resolve(`${dir}${req.url}`);
 
-  app.use(function (req, res, next) {
-    const requestPath = path.resolve(`${dir}${req.url}`);
+        fs.readdir(
+          requestPath,
+          {withFileTypes: true},
+          (a: any, list: {name: any}[]) => {
+            if (!list) {
+              res.status(404).send(`resource not found: ${requestPath}`);
+              return;
+            }
+            const title = `<h2>Current Dir: ${requestPath}</h2>`;
+            const html =
+              title +
+              list
+                .map((f: {name: any}) => f.name)
+                .map((name: any) => `<a href='${name}'>${name}</a>`)
+                .join('<br>');
 
-    fs.readdir(requestPath, {withFileTypes: true}, (a, list) => {
-      if (!list) {
-        res.status(404).send(`resource not found: ${requestPath}`);
-        return;
-      }
-      const title = `<h2>Current Dir: ${requestPath}</h2>`;
-      const html =
-        title +
-        list
-          .map((f) => f.name)
-          .map((name) => `<a href='${name}'>${name}</a>`)
-          .join('<br>');
+            res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+            res.status(200).send(html);
+          }
+        );
+      },
+    ]);
+  }
 
-      res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-      res.status(200).send(html);
-    });
-  });
 
   const server = app.listen(port);
 
-  process.on('uncaughtException', function (err) {
-    if (err.code === 'EACCES') {
+  process.on('uncaughtException', function (err:any) {
+    if (err['code'] === 'EACCES') {
       console.log(
         'EACCES error(lack of permission), use "run as Administrator" when you try to start the program'
       );
@@ -109,13 +126,14 @@ module.exports = function run({
   return server;
 };
 
-function handle404(err, req, res, next) {
-  console.error(err.stack);
-  res.status(404).send('404!');
+function handle404(err, serverResp, next) {
+  console.warn(`sending 404 for ${serverResp?.originalUrl}`);
+  serverResp.status(404).send('404!');
+  next();
 }
 
-function handleSPA({dir, indexFile}) {
-  return (req, res, next) => {
+function handleSPA({dir, indexFile}: {dir:string, indexFile:string}) {
+  return (req: Request, res: any) => {
     const requestPath = path.resolve(`${dir}${req.url}`);
 
     fs.readdir(requestPath, {withFileTypes: true}, () => {
@@ -126,3 +144,5 @@ function handleSPA({dir, indexFile}) {
     });
   };
 }
+
+export {run , MODE};

@@ -2,8 +2,8 @@ const express = require('express');
 const app = express();
 const https = require('https');
 const fs = require('fs');
-const cors = require('cors');
-app.get('/:filename', cors(corsOptionsDelegate), function(req, res, next) {
+import cors from 'cors';
+app.get('/:filename', cors(global['corsOptionsDelegate']), function(req, res, next) {
   res.sendFile(__dirname + `/public/${req.params.filename}`);
 });
 
