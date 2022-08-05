@@ -13,6 +13,7 @@
   "author": "pillsilly",
   "license": "MIT",
   "dependencies": {
+    "@zip.js/zip.js": "^2.6.8",
     "chrome-launcher": "^0.13.4",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -40,11 +41,13 @@
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.3.0",
     "jest": "^28",
+    "jest-environment-jsdom": "^28.1.3",
     "prettier": "^2.3.2",
     "release-it": "^14.10.0",
     "supertest": "^6.1.3",
     "ts-jest": "^28.0.5",
-    "ts-node": "^10.8.1"
+    "ts-node": "^10.8.1",
+    "web-streams-polyfill": "^3.2.1"
   },
   "prettier": {
     "jsxSingleQuote": true,
