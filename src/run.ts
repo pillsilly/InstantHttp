@@ -1,5 +1,5 @@
 import path from 'path';
-import express from "express";
+import express from 'express';
 const cors = require('cors');
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
@@ -9,6 +9,7 @@ const MODE = {
   NORMAL: 'NORMAL',
   SPA: 'SPA',
 };
+
 const defaultArguments = {
   port: '9090',
   dir: process.cwd(),
@@ -17,12 +18,13 @@ const defaultArguments = {
   indexFile: 'index.html',
   quiet: true,
   proxyTarget: '',
-  proxyPattern: ''
-}
+  proxyPattern: '',
+};
 
 function run(args: Partial<typeof defaultArguments> = {}) {
   args = Object.assign({...defaultArguments}, args);
-  const {port, dir, proxyTarget, proxyPattern, open, mode, indexFile, quiet} = args;
+  const {port, dir, proxyTarget, proxyPattern, open, mode, indexFile, quiet} =
+    args;
   console.log(`Version: ${version}`);
   const app = express();
   if (proxyTarget && proxyPattern) {
@@ -38,7 +40,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
   }
   const router = express.Router();
   router.get('/*', function (req, res, next) {
-    if(!quiet) console.log(`Incoming request: ${req.originalUrl}`);
+    if (!quiet) console.log(`Incoming request: ${req.originalUrl}`);
 
     next();
   });
@@ -50,7 +52,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
     throw Error(`Dir [${dir}] does not exit`);
   }
 
-  if(mode === exports.MODE.SPA) {
+  if (mode === exports.MODE.SPA) {
     app.use([
       cors(),
       compression(),
@@ -91,10 +93,9 @@ function run(args: Partial<typeof defaultArguments> = {}) {
     ]);
   }
 
-
   const server = app.listen(port);
 
-  process.on('uncaughtException', function (err:any) {
+  process.on('uncaughtException', function (err: any) {
     if (err['code'] === 'EACCES') {
       console.log(
         'EACCES error(lack of permission), use "run as Administrator" when you try to start the program'
@@ -124,7 +125,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
   }
 
   return server;
-};
+}
 
 function handle404(err, serverResp, next) {
   console.warn(`sending 404 for ${serverResp?.originalUrl}`);
@@ -132,7 +133,7 @@ function handle404(err, serverResp, next) {
   next();
 }
 
-function handleSPA({dir, indexFile}: {dir:string, indexFile:string}) {
+function handleSPA({dir, indexFile}: {dir: string; indexFile: string}) {
   return (req: Request, res: any) => {
     const requestPath = path.resolve(`${dir}${req.url}`);
 
@@ -145,4 +146,4 @@ function handleSPA({dir, indexFile}: {dir:string, indexFile:string}) {
   };
 }
 
-export {run , MODE};
+export {run, MODE};

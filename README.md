@@ -1,51 +1,33 @@
 ## General introduction
->With this tool it becomes possible to start a http server instantly via command-line.
-It provides you ability to test single page application or static web files with a real http server with tiny effort.
+> A command line tool to serve local directory with http protocol
+
+## Installation
+```text
+# Install globally:
+npm i instantly_http -g 
+```
 
 ## Options
 
-- port
-  - Default: 9090
-  - Example: `--port=9090`
-  - Explain: To point which port to use as the server address.
+```bash
+instant_http --help
 
-- dir
-  - Default: Current directory
-  - Example: `--dir=c:/abc`
-  - Explain: To point which directory to serve as the server base directory.
+Usage: instant_http  [global options]
 
-- proxyPattern
-  - Default: undefined
-  - Example: `--proxyPattern=/proxy`
-  - Explain: Which pattern to be used as to determinate which request to `proxyTarget`.
-  - 
-- proxyTarget
-  - Default: undefined
-  - Example: `--proxyTarget=http://google.com`
-  - Explain: Which target to redirect when request path matches with `proxyPattern`.
+Options:
+  -V, --version                      output the version number
+  -p --port [port]                   To point which port to use as the server address. (default: "9090")
+  -d --dir [dir]                     Dir to serve (default: "abc")
+  -pt --proxyTarget [proxyTarget]    Where the delegated communication targets to
+  -pp --proxyPattern [proxyPattern]  URL matcher to be used to identify which url to proxy
+  -o --open [open]                   Whether to open chrome automatically (default: false)
+  -m --mode [mode]                   Which mode to use (default: "NORMAL")
+  -i --indexFile [indexFile]         Index File location(relative to --dir) (default: "index.html")
+  -q --quiet [quiet]                 Set it to false to see more debug outputs (default: false)
+  -h, --help                         display help for command
+```
 
-- open
-  - Default: true
-  - Example: `--open=false`
-  - Explain: If not set (true) then the application will try to launch your Chrome installed with the server address`e.g http://localhost:9090`.
-
-- mode
-  - Default: NORMAL
-  - Example: `--mode=SPA`
-  - Explain: "NORMAL" mode works most likely a http file explorer, it provides very basic function for like list files and resource existence check.
-             "SPA" mode works just like your real SPA http server, that it will redirect request to specific default resource (index.html) if given resource url is not found.
-- indexFile
-  - Default: index.html
-  - Example: `--indexFile=myindex.html`
-  - Explain: See **mode** options.
-  
-- quiet
-  - Default: true
-  - Example: `--quiet=false`
-  - Explain: Set it to false to see more debug outputs.  
-
-## How to run
-**Examples**:
+## Examples
 
 - In repository
 	```bash
@@ -73,5 +55,11 @@ It provides you ability to test single page application or static web files with
   # e.g
   npx pkg . --targets=host --output instantHttp
   # or
-  npm run buld
+  npm run build
+  ```
+
+## Test
+
+- ```javascript
+  npm run test
   ```

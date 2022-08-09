@@ -1,4 +1,3 @@
-
 jest.mock('../src/run');
 import {run} from '../src/run';
 import {getOptions} from '../src/bin';

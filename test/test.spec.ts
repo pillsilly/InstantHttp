@@ -1,4 +1,4 @@
-import {run} from "../src/run";
+import {run} from '../src/run';
 
 const request = require('supertest');
 const ChromeLauncher = require('chrome-launcher');
@@ -12,9 +12,7 @@ describe('Test run.js', function () {
     jest.clearAllMocks();
   });
 
-  afterAll(function () {
-
-  })
+  afterAll(function () {});
 
   it('should start server without passing arguments', async function () {
     app = run();
@@ -26,9 +24,7 @@ describe('Test run.js', function () {
       app = run();
       const response = await request(app).get('/').expect(200);
 
-      expect(
-        response.text.startsWith('<h2>Current Di')
-      ).toBeTruthy();
+      expect(response.text.startsWith('<h2>Current Di')).toBeTruthy();
     });
 
     it('should forward request /api/abc to proxyTarget http://localhost:9091', async function () {
