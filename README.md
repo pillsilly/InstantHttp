@@ -2,6 +2,7 @@
 > A command line tool to serve local directory with http protocol
 
 ## Installation
+
 ```text
 # Install globally:
 npm i instantly_http -g 
@@ -27,39 +28,35 @@ Options:
   -h, --help                         display help for command
 ```
 
-## Examples
+## Usages
 
-- In repository
-	```bash
-	node bin.js --open=false --port=8080 --proxyTarget=http://proxy-server:8080 --proxyPattern=/api/*
-	````
-	> This is going to serve the current dir `./` with local port 8080, while all the request under `/proxy` would be redirected to http://google.com
+### As a nodejs lib
+```javascript
+const instantly_http = require('instantly_http');
+instant_http --open=false --port=8080 --proxyTarget=http://proxy-server:8080 --proxyPattern=/api/*
+```
 
-- Using under NodeJS-ready environment
-	```javascript
-  const instantly_http = require('instantly_http');
-	instant_http --open=false --port=8080 --proxyTarget=http://proxy-server:8080 --proxyPattern=/api/*
-	```
-	> `npm -g instant_http` is required before that.
+### As a binary
+```bash
+./instantHttp  --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+```
 
-- Using binary
-	```bash
-	./instantHttp  --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
-	```
-	> Check the section [Build](#Build) to know how to get an executable binary
+## Build for portable binary
+After checkout then install this repository, you can then try below commands to get an executable binary.
 
+```
+npx pkg . --targets=host --output instantHttp
+```
 
-## Build
-- > [pkg](https://www.npmjs.com/package/pkg) is used as the package utility, please check pkg's document in order to build runnable binaries as you want.
-  ```bash
-  # e.g
-  npx pkg . --targets=host --output instantHttp
-  # or
-  npm run build
-  ```
+> [pkg](https://www.npmjs.com/package/pkg) is used as the package utility, please check pkg's document in order to build runnable binaries as you want.
+
+Or:
+```
+npm run build
+```
 
 ## Test
 
-- ```javascript
-  npm run test
-  ```
+```bash
+npm run test
+```
