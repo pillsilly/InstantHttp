@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { cc } from './aaa';
 import {MODE, run} from './run';
 import {program} from 'commander';
 
@@ -45,3 +46,6 @@ export function getOptions() {
 }
 
 run(getOptions());
+
+
+cc();

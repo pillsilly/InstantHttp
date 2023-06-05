@@ -1,5 +1,7 @@
 import path from 'path';
 import express from 'express';
+import { cc } from './aaa';
+import {run2} from './run2'
 const cors = require('cors');
 const fs = require('fs');
 const ChromeLauncher = require('chrome-launcher');
@@ -147,3 +149,6 @@ function handleSPA({dir, indexFile}: {dir: string; indexFile: string}) {
 }
 
 export {run, MODE};
+cc();
+
+run2();
