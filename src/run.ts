@@ -52,7 +52,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
     throw Error(`Dir [${dir}] does not exit`);
   }
 
-  if (mode === exports.MODE.SPA) {
+  if (mode === MODE.SPA) {
     app.use([
       cors(),
       compression(),

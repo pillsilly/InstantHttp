@@ -178,7 +178,16 @@ module.exports = {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    "\\.[jt]sx?$": "babel-jest"
+    // '^.+\\.(t|j)sx?$': '@swc/jest',
+    '^.+\\.(t|j)sx?$': [
+      'esbuild-jest',
+      {
+        sourcemap: true,
+        loaders: {
+          '.spec.ts': 'tsx',
+        },
+      },
+    ],
   },
 
 
