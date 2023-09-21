@@ -1,6 +1,6 @@
 {
   "name": "instantly_http",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Tool to instantly create your own http server for development-use",
   "bin": "./dist/bin.js",
   "main": "./dist/run.js",
@@ -9,7 +9,7 @@
     "compile:prod": "rm dist/* || npx tsc --sourceMap false && ls -lha dist",
     "compile:esbuild:prod": "rm dist/* || npx esbuild src/bin.ts --bundle --platform=node --target=node18 --outdir=dist --packages=external && ls -lha dist",
     "prerelease": "npm run compile:prod",
-    "release": "npx release-it",
+    "release": "npm run compile:prod && npx release-it",
     "prebuild-binary": "npm run compile:prod",
     "build-binary": "pkg ./dist/bin.js --targets=node18 --compress=Brotli -d --public-packages=* -o=dist/instant_http && ls -lha dist"
   },
