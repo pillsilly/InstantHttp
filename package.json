@@ -6,8 +6,8 @@
   "main": "./dist/run.js",
   "scripts": {
     "test": "npx jest --debug",
-    "compile:prod": "rm dist/* && npx tsc --sourceMap false && ls -lha dist",
-    "compile:esbuild:prod": "rm dist/* && npx esbuild src/bin.ts --bundle --platform=node --target=node18 --outdir=dist --packages=external && ls -lha dist",
+    "compile:prod": "rm dist/* || npx tsc --sourceMap false && ls -lha dist",
+    "compile:esbuild:prod": "rm dist/* || npx esbuild src/bin.ts --bundle --platform=node --target=node18 --outdir=dist --packages=external && ls -lha dist",
     "prerelease": "npm run build",
     "release": "npx release-it",
     "prebuild": "npm run compile:prod",
