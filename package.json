@@ -8,10 +8,10 @@
     "test": "npx jest --debug",
     "compile:prod": "rm dist/* || npx tsc --sourceMap false && ls -lha dist",
     "compile:esbuild:prod": "rm dist/* || npx esbuild src/bin.ts --bundle --platform=node --target=node18 --outdir=dist --packages=external && ls -lha dist",
-    "prerelease": "npm run build",
+    "prerelease": "npm run compile:prod",
     "release": "npx release-it",
-    "prebuild": "npm run compile:prod",
-    "build": "pkg ./dist/bin.js --targets=node18 --compress=Brotli -d --public-packages=* -o=dist/instant_http && ls -lha dist"
+    "prebuild-binary": "npm run compile:prod",
+    "build-binary": "pkg ./dist/bin.js --targets=node18 --compress=Brotli -d --public-packages=* -o=dist/instant_http && ls -lha dist"
   },
   "author": "pillsilly",
   "license": "MIT",
