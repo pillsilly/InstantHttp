@@ -8,7 +8,6 @@
     "test": "npx jest --debug",
     "compile:prod": "rm -f dist/* && npx tsc --sourceMap false && ls -lha dist",
     "compile:esbuild:prod": "rm dist/* -f && npx esbuild src/bin.ts --bundle --platform=node --target=node18 --outdir=dist --packages=external && ls -lha dist",
-    "prerelease": "npm run compile:prod",
     "release": "npx release-it",
     "prebuild-binary": "npm run compile:prod",
     "build-binary": "pkg ./dist/bin.js --targets=node18 --compress=Brotli -d --public-packages=* -o=dist/instant_http && ls -lha dist"
