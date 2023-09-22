@@ -37,7 +37,7 @@ describe('Test run.js', function () {
       const res = await request(app).get('/api/abc');
 
       expect(res.text).toEqual(
-        'Error occured while trying to proxy: 127.0.0.1:9090/api/abc'
+        'Error occurred while trying to proxy: 127.0.0.1:9090/api/abc'
       );
     });
   });
