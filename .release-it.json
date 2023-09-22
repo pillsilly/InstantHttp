@@ -1,7 +1,7 @@
 {
   "hooks": {
     "before:init": ["tsc --noEmit", "npm test"],
-    "after:bump": "npm run compile:prod",
+    "after:bump": "npm run prerelease",
     "after:git:release": "echo After git push, before github release"
   }
 }
