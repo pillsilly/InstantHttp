@@ -1,8 +1,9 @@
 import path from 'path';
 import express from 'express';
-const cors = require('cors');
-const fs = require('fs');
-const ChromeLauncher = require('chrome-launcher');
+import cors from 'cors';
+import fs from 'fs';
+import * as ChromeLauncher from 'chrome-launcher';
+
 const compression = require('compression');
 const {version} = require('../package.json');
 const MODE = {
