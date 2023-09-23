@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import {MODE, run} from './run';
-import {program} from 'commander';
+import { MODE, run } from './run';
+import { program } from 'commander';
 
 import pkgJson from '../package.json';
 
-export function getOptions() {
+export function getOptions (): any {
   program
     .name('instant_http ')
     .version(pkgJson.version)
@@ -39,9 +39,9 @@ export function getOptions() {
     )
 
     .parse(process.argv);
-  const opts = program.opts() as Parameters<typeof run>[0];
+  const opts = program.opts();
   console.info(opts);
   return opts;
 }
 
-run(getOptions());
+run(getOptions())
