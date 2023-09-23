@@ -2,10 +2,11 @@ import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
-import * as ChromeLauncher from 'chrome-launcher';
 
-const compression = require('compression');
-const {version} = require('../package.json');
+import compression from 'compression';
+
+import {version} from '../package.json';
+
 const MODE = {
   NORMAL: 'NORMAL',
   SPA: 'SPA',
@@ -22,7 +23,7 @@ const defaultArguments = {
   proxyPattern: '',
 };
 
-function run(args: Partial<typeof defaultArguments> = {}) {
+async function run(args: Partial<typeof defaultArguments> ) {
   args = Object.assign({...defaultArguments}, args);
   const {port, dir, proxyTarget, proxyPattern, open, mode, indexFile, quiet} =
     args;
@@ -40,7 +41,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
     );
   }
   const router = express.Router();
-  router.get('/*', function (req, res, next) {
+  router.get('/*', function(req, res, next) {
     if (!quiet) console.log(`Incoming request: ${req.originalUrl}`);
 
     next();
@@ -53,7 +54,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
     throw Error(`Dir [${dir}] does not exit`);
   }
 
-  if (mode === MODE.SPA) {
+  if (mode===MODE.SPA) {
     app.use([
       cors(),
       compression(),
@@ -67,7 +68,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
       compression(),
       router,
       express.static(dir),
-      function (req: any, res: any) {
+      function(req: any, res: any) {
         const requestPath = path.resolve(`${dir}${req.url}`);
 
         fs.readdir(
@@ -96,8 +97,8 @@ function run(args: Partial<typeof defaultArguments> = {}) {
 
   const server = app.listen(port);
 
-  process.on('uncaughtException', function (err: any) {
-    if (err['code'] === 'EACCES') {
+  process.on('uncaughtException', function(err: any) {
+    if (err['code']==='EACCES') {
       console.log(
         'EACCES error(lack of permission), use "run as Administrator" when you try to start the program'
       );
@@ -107,6 +108,7 @@ function run(args: Partial<typeof defaultArguments> = {}) {
   });
 
   if (open) {
+    const ChromeLauncher = await import('chrome-launcher');
     ChromeLauncher.launch({
       startingUrl: `http://127.0.0.1:${port}/`,
       chromeFlags: ['--disable-web-security'],

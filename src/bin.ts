@@ -3,7 +3,7 @@
 import {MODE, run} from './run';
 import {program} from 'commander';
 
-const pkgJson = require('../package.json');
+import pkgJson from '../package.json';
 
 export function getOptions() {
   program

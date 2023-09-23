@@ -8,3 +8,5 @@ instantHttp
 instantly_http
 .vscode/
 dist/
+tmp
+temp/
