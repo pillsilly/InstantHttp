@@ -7,7 +7,7 @@ import compression from 'compression';
 
 import {version} from '../package.json';
 
-const MODE = {
+export const MODE = {
   NORMAL: 'NORMAL',
   SPA: 'SPA',
 };
@@ -22,11 +22,10 @@ const defaultArguments = {
   proxyTarget: '',
   proxyPattern: '',
 };
-
-async function run(args: Partial<typeof defaultArguments> ) {
-  args = Object.assign({...defaultArguments}, args);
+export async function run(parameters: Partial<typeof defaultArguments>) {
+  parameters = Object.assign({...defaultArguments}, parameters);
   const {port, dir, proxyTarget, proxyPattern, open, mode, indexFile, quiet} =
-    args;
+    parameters;
   console.log(`Version: ${version}`);
   const app = express();
   if (proxyTarget && proxyPattern) {
@@ -121,19 +120,13 @@ async function run(args: Partial<typeof defaultArguments> ) {
       })
       .then(() => {
         process.on('exit', (code) => {
-          console.log('Exit nd kill launched chrome');
+          console.log(`Exit nd kill launched chrome code-${code}`);
           ChromeLauncher.killAll();
         });
       });
   }
 
   return server;
-}
-
-function handle404(err, serverResp, next) {
-  console.warn(`sending 404 for ${serverResp?.originalUrl}`);
-  serverResp.status(404).send('404!');
-  next();
 }
 
 function handleSPA({dir, indexFile}: {dir: string; indexFile: string}) {
@@ -149,4 +142,4 @@ function handleSPA({dir, indexFile}: {dir: string; indexFile: string}) {
   };
 }
 
-export {run, MODE};
+// export {run, MODE};
