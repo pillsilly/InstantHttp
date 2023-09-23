@@ -4,6 +4,7 @@ import cors from 'cors';
 import fs from 'fs';
 
 import compression from 'compression';
+const ChromeLauncher = require('chrome-launcher');
 
 import {version} from '../package.json';
 
@@ -108,7 +109,6 @@ async function run(args: Partial<typeof defaultArguments> ) {
   });
 
   if (open) {
-    const ChromeLauncher = await import('chrome-launcher');
     ChromeLauncher.launch({
       startingUrl: `http://127.0.0.1:${port}/`,
       chromeFlags: ['--disable-web-security'],
