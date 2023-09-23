@@ -29,10 +29,14 @@ Options:
 
 ## Usages
 
-### As a nodejs lib
+### MJS/TS
 ```javascript
-const instantly_http = require('instantly_http');
-instant_http --open=false --port=8080 --proxyTarget=http://proxy-server:8080 --proxyPattern=/api/*
+import {run} from 'instantly_http';
+```
+
+### CJS
+```javascript
+const {run} = require('instantly_http');
 ```
 
 ### As a binary

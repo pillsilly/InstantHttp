@@ -1,8 +1,6 @@
 import {run} from '../src/run';
 
 const request = require('supertest');
-const ChromeLauncher = require('chrome-launcher');
-jest.mock('chrome-launcher');
 
 describe('Test run.js', function () {
   let app = beforeEach(function () {});
@@ -41,16 +39,6 @@ describe('Test run.js', function () {
         'Error occurred while trying to proxy: 127.0.0.1:9090/api/abc'
       );
     });
-  });
-
-  it('should launch chrome if option "open" is true', async function () {
-    ChromeLauncher.launch.mockImplementationOnce(() => Promise.resolve());
-    app = await run({open: true});
-    expect(ChromeLauncher.launch).toBeCalledWith({
-      chromeFlags: ['--disable-web-security'],
-      startingUrl: 'http://127.0.0.1:9090/',
-    });
-    expect(ChromeLauncher.launch).toBeCalledTimes(1);
   });
 
   describe('SPA Mode', function () {
