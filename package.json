@@ -9,7 +9,7 @@
     "test": "npx jest --debug",
     "lint": "tsc --noEmit",
     "compile:prod": "rm -f dist/* && npx tsup && ls -lha dist",
-    "prerelease": "npm run compile:esbuild:prod",
+    "prerelease": "npm run compile:prod",
     "release": "npx release-it",
     "prebuild-binary": "rm executable/* -f && npx esbuild src/bin.ts --bundle --platform=node --minify --target=node18 --outdir=executable  && ls -lha executable/*",
     "build-binary": "pkg ./executable/bin.js --targets=node18 --compress=Brotli -d --public-packages=* -o=executable/instant_http && ls -lha executable"
