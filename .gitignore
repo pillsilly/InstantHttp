@@ -11,3 +11,4 @@ dist/
 tmp
 temp/
 executable
+*.tgz
