@@ -14,6 +14,15 @@ module.exports = {
         sourceType: 'script',
       },
     },
+    {
+      files: [
+        '**/*.ts',
+        '**/*.ts'
+      ],
+      parserOptions: {
+        project: './tsconfig.spec.json',
+      },
+    },
   ],
   parserOptions: {
     ecmaVersion: 'latest',

@@ -1,6 +1,6 @@
+import { run } from '../src/run';
+import { getOptions } from '../src/bin';
 jest.mock('../src/run');
-import {run} from '../src/run';
-import {getOptions} from '../src/bin';
 
 describe.only('Test bin.js', function () {
   beforeEach(function () {
@@ -18,7 +18,7 @@ describe.only('Test bin.js', function () {
         mode: 'NORMAL',
         open: false,
         port: '9090',
-        quiet: false,
+        quiet: false
       })
     );
   });
