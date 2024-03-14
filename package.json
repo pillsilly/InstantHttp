@@ -7,7 +7,7 @@
   "scripts": {
     "testpack": "rm ./tmp/* -rf &&  npm pack --pack-destination=./tmp",
     "test": "npx jest --debug",
-    "lint": "tsc --noEmit",
+    "lint": "tsc --noEmit && eslint -c .eslintrc.js",
     "compile:prod": "rm -f dist/* && npx tsup && ls -lha dist",
     "prerelease": "npm run compile:prod",
     "release": "npx release-it",
