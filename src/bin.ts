@@ -25,7 +25,6 @@ export function getOptions (): any {
       '-pp --proxyPattern [proxyPattern]',
       'URL matcher to be used to identify which url to proxy'
     )
-    .option('-o --open [open]', 'Whether to open chrome automatically', false)
     .option('-m --mode [mode]', 'Which mode to use', MODE.NORMAL)
     .option(
       '-i --indexFile [indexFile]',

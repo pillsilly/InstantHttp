@@ -20,7 +20,6 @@ Options:
   -d --dir [dir]                     Dir to serve (default: "/home/frank/code/InstantHttp")
   -pt --proxyTarget [proxyTarget]    Where the delegated communication targets to
   -pp --proxyPattern [proxyPattern]  URL matcher to be used to identify which url to proxy
-  -o --open [open]                   Whether to open chrome automatically (default: false)
   -m --mode [mode]                   Which mode to use (default: "NORMAL")
   -i --indexFile [indexFile]         Index File location(relative to --dir) (default: "index.html")
   -q --quiet [quiet]                 Set it to false to see more debug outputs (default: false)
@@ -41,7 +40,7 @@ const {run} = require('instantly_http');
 
 ### As a binary
 ```bash
-./instantHttp  --open=false --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+./instantHttp  --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
 ```
 
 ## Build for portable binary
@@ -59,3 +58,6 @@ npm run build-binary
 ```bash
 npm run test
 ```
+
+## Breaking Changes
+- **vNext**: Removed `--open` option and chrome launcher functionality. Server URL is now displayed prominently in terminal for easy clicking.

@@ -15,7 +15,6 @@ export const MODE = {
 interface CliArg {
   port: string
   dir: string
-  open: boolean
   mode: string
   indexFile: string
   quiet: boolean
@@ -26,16 +25,15 @@ interface CliArg {
 const defaultArguments: CliArg = {
   port: '9090',
   dir: process.cwd(),
-  open: false,
   mode: MODE.NORMAL,
   indexFile: 'index.html',
   quiet: true,
   proxyTarget: '',
   proxyPattern: ''
 };
-export async function run (parameters: CliArg) {
+export function run (parameters: CliArg) {
   parameters = Object.assign({ ...defaultArguments }, parameters)
-  const { port, dir, proxyTarget, proxyPattern, open, mode, indexFile, quiet } =
+  const { port, dir, proxyTarget, proxyPattern, mode, indexFile, quiet } =
     parameters
   console.log(`Version: ${version}`)
   const app = express()
@@ -58,7 +56,10 @@ export async function run (parameters: CliArg) {
   })
 
   console.log(`Serving dir [${dir}]`)
-  console.log(`Serving port ${port}`)
+  console.log('')
+  console.log('  Server running at:')
+  console.log(`  \x1b[1;34mhttp://127.0.0.1:${port}/\x1b[0m`)
+  console.log('')
 
   if (!fs.existsSync(path.resolve(dir))) {
     throw Error(`Dir [${dir}] does not exit`)
@@ -116,26 +117,6 @@ export async function run (parameters: CliArg) {
       console.log('Caught exception: ', err)
     }
   })
-
-  if (open) {
-    const ChromeLauncher = await import('chrome-launcher')
-    void ChromeLauncher.launch({
-      startingUrl: `http://127.0.0.1:${port}/`,
-      chromeFlags: ['--disable-web-security']
-    })
-      .catch((e) => {
-        console.log(
-          "failed to launch chrome, pls start chrome with the flag '--disable-web-security' manually.",
-          e
-        )
-      })
-      .then(() => {
-        process.on('exit', (code) => {
-          console.log(`Exit nd kill launched chrome code-${code}`)
-          ChromeLauncher.killAll()
-        })
-      })
-  }
 
   return server
 }

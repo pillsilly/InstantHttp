@@ -16,7 +16,6 @@ describe.only('Test bin.js', function () {
         dir: expect.stringContaining('InstantHttp'),
         indexFile: expect.stringMatching('index.html'),
         mode: 'NORMAL',
-        open: false,
         port: '9090',
         quiet: false
       })
