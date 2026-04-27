@@ -12,3 +12,4 @@ tmp
 temp/
 executable
 *.tgz
+package-lock.json
