@@ -1,46 +1,49 @@
 #!/usr/bin/env node
 
 import { MODE, run } from './run';
-import { program } from 'commander';
+import { Command } from 'commander';
 
 import pkgJson from '../package.json';
 
 export function getOptions (): any {
+  const program = new Command();
   program
     .name('instant_http ')
     .version(pkgJson.version)
     .allowUnknownOption()
+    .allowExcessArguments(true)
     .usage('[global options]')
     .option(
-      '-p --port [port]',
+      '-p, --port [port]',
       'To point which port to use as the server address.',
       '9090'
     )
-    .option('-d --dir [dir]', 'Dir to serve', process.cwd())
+    .option('-d, --dir [dir]', 'Dir to serve', process.cwd())
     .option(
-      '-pt --proxyTarget [proxyTarget]',
+      '-t, --proxyTarget [proxyTarget]',
       'Where the delegated communication targets to'
     )
     .option(
-      '-pp --proxyPattern [proxyPattern]',
+      '-P, --proxyPattern [proxyPattern]',
       'URL matcher to be used to identify which url to proxy'
     )
-    .option('-m --mode [mode]', 'Which mode to use', MODE.NORMAL)
+    .option('-m, --mode [mode]', 'Which mode to use', MODE.NORMAL)
     .option(
-      '-i --indexFile [indexFile]',
-      'Index File location(relative to --dir)',
+      '-i, --indexFile [indexFile]',
+      'Index File location (relative to --dir)',
       'index.html'
     )
     .option(
-      '-q --quiet [quiet]',
+      '-q, --quiet [quiet]',
       'Set it to false to see more debug outputs',
       false
-    )
+    );
 
-    .parse(process.argv);
+  // Parse only args from node onwards, skip jest-specific args
+  program.parse(process.argv, { from: 'user' });
   const opts = program.opts();
   console.info(opts);
   return opts;
 }
 
-run(getOptions())
+run(getOptions());
