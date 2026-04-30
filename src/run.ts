@@ -39,17 +39,30 @@ export function run (parameters: CliArg) {
   const app = express()
   if (proxyTarget && proxyPattern) {
     const { createProxyMiddleware } = require('http-proxy-middleware')
-    app.use(
-      proxyPattern,
-      createProxyMiddleware({
-        target: proxyTarget,
-        changeOrigin: true,
-        secure: false
-      })
-    )
+    const proxy = createProxyMiddleware({
+      target: proxyTarget,
+      changeOrigin: true,
+      secure: false
+    })
+    // Convert glob pattern to regex for matching
+    let patternRegex: RegExp
+    if (proxyPattern.includes('*')) {
+      const regexPattern = '^' + proxyPattern.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$'
+      patternRegex = new RegExp(regexPattern)
+    } else {
+      patternRegex = new RegExp('^' + proxyPattern.replace(/\./g, '\\.') + '.*$')
+    }
+    // Use a custom middleware to match paths
+    app.use((req, res, next) => {
+      if (patternRegex.test(req.url)) {
+        proxy(req, res, next)
+      } else {
+        next()
+      }
+    })
   }
   const router = express.Router()
-  router.get('/*', function (req, _res, next) {
+  router.use(function (req, _res, next) {
     if (!quiet) console.log(`Incoming request: ${req.originalUrl}`)
 
     next()
@@ -66,44 +79,40 @@ export function run (parameters: CliArg) {
   }
 
   if (mode === MODE.SPA) {
-    app.use([
-      cors(),
-      compression(),
-      router,
-      express.static(dir),
-      handleSPA({ dir, indexFile })
-    ])
+    app.use(cors())
+    app.use(compression())
+    app.use(router)
+    app.use(express.static(dir))
+    app.use(handleSPA({ dir, indexFile }))
   } else {
-    app.use([
-      cors(),
-      compression(),
-      router,
-      express.static(dir),
-      function (req: any, res: any) {
-        const requestPath = path.resolve(`${dir}${req.url}`)
+    app.use(cors())
+    app.use(compression())
+    app.use(router)
+    app.use(express.static(dir))
+    app.use(function (req: any, res: any) {
+      const requestPath = path.resolve(`${dir}${req.url}`)
 
-        fs.readdir(
-          requestPath,
-          { withFileTypes: true },
-          (_a: any, list: Array<{ name: any }>) => {
-            if (!list) {
-              res.status(404).send(`resource not found: ${requestPath}`)
-              return
-            }
-            const title = `<h2>Current Dir: ${requestPath}</h2>`
-            const html =
-              title +
-              list
-                .map((f: { name: any }) => f.name)
-                .map((name: any) => `<a href='${name}'>${name}</a>`)
-                .join('<br>')
-
-            res.setHeader('Content-Type', 'text/html; charset=UTF-8')
-            res.status(200).send(html)
+      fs.readdir(
+        requestPath,
+        { withFileTypes: true },
+        (_a: any, list: Array<{ name: any }>) => {
+          if (!list) {
+            res.status(404).send(`resource not found: ${requestPath}`)
+            return
           }
-        )
-      }
-    ])
+          const title = `<h2>Current Dir: ${requestPath}</h2>`
+          const html =
+            title +
+            list
+              .map((f: { name: any }) => f.name)
+              .map((name: any) => `<a href='${name}'>${name}</a>`)
+              .join('<br>')
+
+          res.setHeader('Content-Type', 'text/html; charset=UTF-8')
+          res.status(200).send(html)
+        }
+      )
+    })
   }
 
   const server = app.listen(port)
