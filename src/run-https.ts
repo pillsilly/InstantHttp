@@ -1,12 +1,15 @@
 import cors from 'cors';
 import path from 'path';
-const express = require('express');
-const app = express();
-const https = require('https');
-const fs = require('fs');
+import express from 'express';
+import https from 'https';
+import fs from 'fs';
+import type { Request, Response, NextFunction } from 'express';
 
-app.get('/:filename', cors(global.corsOptionsDelegate), function (req, res, next) {
-  res.sendFile(path.join(__dirname, 'public', req.params.filename));
+const app = express();
+
+app.get('/:filename', cors(), function (req: Request, res: Response, _next: NextFunction) {
+  const filename = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
+  res.sendFile(path.join(__dirname, 'public', filename));
 });
 
 https.createServer({
