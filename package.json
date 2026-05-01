@@ -13,8 +13,8 @@
     "release": "npx release-it",
     "audit": "npm audit --omit=dev",
     "fix-audit": "npm audit fix --omit=dev",
-    "prebuild-binary": "rm executable/* -f && npx esbuild src/bin.ts --bundle --platform=node --minify --target=node18 --outdir=executable  && ls -lha executable/*",
-    "build-binary": "pkg ./executable/bin.js --targets=node18 --compress=Brotli -d --public-packages=* -o=executable/instant_http && ls -lha executable"
+    "prebuild-binary": "rm executable/* -f && npx esbuild src/bin.ts --bundle --platform=node --minify --target=node22 --outdir=executable  && ls -lha executable/*",
+    "build-binary": "./scripts/build-sea.sh"
   },
   "exports": {
     ".": {
@@ -75,7 +75,7 @@
     "eslint-plugin-promise": "7.3.0",
     "globals": "17.5.0",
     "jest": "30",
-    "pkg": "5.8.1",
+    "postject": "1.0.0-alpha.6",
     "prettier": "3.8.3",
     "release-it": "20.0.1",
     "supertest": "7.2.2",

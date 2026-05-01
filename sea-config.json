@@ -1,0 +1,5 @@
+{
+  "main": "executable/bin.js",
+  "output": "sea-prep.blob",
+  "disableExperimentalSEAWarning": true
+}
