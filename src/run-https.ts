@@ -8,7 +8,12 @@ import type { Request, Response, NextFunction } from 'express';
 const app = express();
 
 app.get('/:filename', cors(), function (req: Request, res: Response, _next: NextFunction) {
-  const filename = Array.isArray(req.params.filename) ? req.params.filename[0] : req.params.filename;
+  const filenameParam = req.params['filename'];
+  const filename = Array.isArray(filenameParam) ? filenameParam[0] : filenameParam;
+  if (!filename) {
+    res.status(400).send('Filename required');
+    return;
+  }
   res.sendFile(path.join(__dirname, 'public', filename));
 });
 
