@@ -68,6 +68,30 @@ describe('Test run.js', function () {
 
       expect(res.text).toContain('Error occurred while trying to proxy');
     });
+
+    it('should forward request /api/abc to proxyTarget when proxyPattern has no wildcard', async function () {
+      const params = {
+        port: getNextPort(),
+        proxyPattern: '/api',
+        proxyTarget: 'http://localhost:9099/'
+      };
+      app = run(params as any);
+
+      const res = await request(app).get('/api/abc');
+
+      expect(res.text).toContain('Error occurred while trying to proxy');
+    });
+
+    it('should not forward non-matching request to proxy', async function () {
+      const params = {
+        port: getNextPort(),
+        proxyPattern: '/api/*',
+        proxyTarget: 'http://localhost:9099/'
+      };
+      app = run(params as any);
+
+      await request(app).get('/').expect(200);
+    });
   });
 
   describe('SPA Mode', function () {
