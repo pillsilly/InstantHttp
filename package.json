@@ -1,6 +1,6 @@
 {
   "name": "instantly_http",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Tool to instantly create your own http server for development-use",
   "bin": "./dist/bin.js",
   "main": "./dist/index.js",
