@@ -18,6 +18,6 @@ app.get('/:filename', cors(), function (req: Request, res: Response, _next: Next
 });
 
 https.createServer({
-  key: fs.readFileSync('server.key'),
-  cert: fs.readFileSync('server.cert')
+  key: fs.readFileSync(path.resolve(__dirname, '..', 'server.key')),
+  cert: fs.readFileSync(path.resolve(__dirname, '..', 'server.cert'))
 }, app).listen(9078);

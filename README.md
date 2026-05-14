@@ -1,5 +1,5 @@
 ## General introduction
-> A command line tool to serve local directory with http protocol
+> A command line tool to serve local directories, or to run a static-first reverse proxy with optional HTTPS
 
 ## Installation
 
@@ -20,11 +20,22 @@ Options:
   -d --dir [dir]                     Dir to serve (default: "/home/frank/code/InstantHttp")
   -pt --proxyTarget [proxyTarget]    Where the delegated communication targets to
   -pp --proxyPattern [proxyPattern]  URL matcher to be used to identify which url to proxy
+  --proxyStaticFileWise              Serve static files first, then proxy everything else
+  --https                            Enable HTTPS listener
+  --httpsKey [httpsKey]              HTTPS private key file
+  --httpsCert [httpsCert]            HTTPS certificate file
   -m --mode [mode]                   Which mode to use (default: "NORMAL")
   -i --indexFile [indexFile]         Index File location(relative to --dir) (default: "index.html")
   -q --quiet [quiet]                 Set it to false to see more debug outputs (default: false)
   -h, --help                         display help for command
 ```
+
+### Proxy notes
+
+- `--proxyStaticFileWise` reuses `--proxyTarget`.
+- `--proxyStaticFileWise` is mutually exclusive with `--proxyPattern`.
+- `--https` uses the existing `server.key` and `server.cert` in the package root unless `--httpsKey` / `--httpsCert` are provided.
+- In `--proxyStaticFileWise` mode, `/` is served through `--indexFile`.
 
 ## Usages
 
@@ -40,7 +51,7 @@ const {run} = require('instantly_http');
 
 ### As a binary
 ```bash
-./instantHttp  --port=8080 --proxyTarget=http://google.com --proxyPattern=/proxy
+./instantHttp --port=8080 --proxyStaticFileWise --proxyTarget=http://127.0.0.1:4431 --https
 ```
 
 ## Build for portable binary

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import { MODE, run } from './run';
-import { Command } from 'commander';
+import {MODE, run} from './run'
+import {Command} from 'commander'
 
-import pkgJson from '../package.json';
+import pkgJson from '../package.json'
 
-export function getOptions (): any {
-  const program = new Command();
+export function getOptions(): any {
+  const program = new Command()
   program
     .name('instant_http ')
     .version(pkgJson.version)
@@ -27,6 +27,10 @@ export function getOptions (): any {
       '-P, --proxyPattern [proxyPattern]',
       'URL matcher to be used to identify which url to proxy'
     )
+    .option('--proxyStaticFileWise', 'Serve static files first and proxy everything else')
+    .option('--https', 'Enable HTTPS listener')
+    .option('--httpsKey [httpsKey]', 'HTTPS private key file')
+    .option('--httpsCert [httpsCert]', 'HTTPS certificate file')
     .option('-m, --mode [mode]', 'Which mode to use', MODE.NORMAL)
     .option(
       '-i, --indexFile [indexFile]',
@@ -37,13 +41,26 @@ export function getOptions (): any {
       '-q, --quiet [quiet]',
       'Set it to false to see more debug outputs',
       false
-    );
+    )
 
   // Parse only args from node onwards, skip jest-specific args
-  program.parse(process.argv, { from: 'user' });
-  const opts = program.opts();
-  console.info(opts);
-  return opts;
+  program.parse(process.argv, {from: 'user'})
+  const opts = program.opts()
+  console.info(opts)
+  return opts
 }
 
-run(getOptions());
+export function main() {
+  try {
+    run(getOptions())
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(message)
+    process.exit(1)
+  }
+}
+
+if (require.main === module) {
+  main()
+}
+
