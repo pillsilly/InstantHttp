@@ -1,6 +1,7 @@
 import path from 'path'
 import http from 'http'
 import https from 'https'
+import {Socket} from 'net'
 import express, {Request} from 'express'
 import cors from 'cors'
 import fs from 'fs'
@@ -32,7 +33,21 @@ interface CliArg {
   httpsCert?: string
 }
 
-const defaultArguments = {
+interface ResolvedCliArg {
+  port: string
+  dir: string
+  mode: string
+  indexFile: string
+  quiet: boolean
+  proxyTarget: string
+  proxyPattern: string
+  proxyStaticFileWise: boolean
+  https: boolean
+  httpsKey: string
+  httpsCert: string
+}
+
+const defaultArguments: ResolvedCliArg = {
   port: '9090',
   dir: process.cwd(),
   mode: MODE.NORMAL,
@@ -50,7 +65,7 @@ const PROXY_FINGERPRINT_HEADERS = ['x-forwarded-for', 'x-forwarded-host', 'x-for
 let uncaughtExceptionRegistered = false
 
 export function run(parameters: CliArg) {
-  const resolved = Object.assign({ ...defaultArguments }, parameters)
+  const resolved: ResolvedCliArg = Object.assign({ ...defaultArguments }, parameters)
   const port = parsePort(resolved.port)
 
   validateArguments(resolved)
@@ -93,7 +108,7 @@ function parsePort(port: string | number | undefined): number {
   return parsed
 }
 
-function validateArguments(parameters: typeof defaultArguments) {
+function validateArguments(parameters: ResolvedCliArg) {
   if (parameters.proxyStaticFileWise && !parameters.proxyTarget) {
     throw new Error('Invalid argument: --proxyStaticFileWise requires --proxyTarget')
   }
@@ -103,7 +118,7 @@ function validateArguments(parameters: typeof defaultArguments) {
   }
 }
 
-function createLegacyServer(app: express.Express, parameters: typeof defaultArguments, port: number) {
+function createLegacyServer(app: express.Express, parameters: ResolvedCliArg, port: number) {
   const dir = path.resolve(parameters.dir)
 
   app.use(cors())
@@ -186,7 +201,7 @@ function createLegacyServer(app: express.Express, parameters: typeof defaultArgu
   return createHttpOrHttpsServer(app, parameters, port)
 }
 
-function createProxyStaticFirstServer(app: express.Express, parameters: typeof defaultArguments, port: number) {
+function createProxyStaticFirstServer(app: express.Express, parameters: ResolvedCliArg, port: number) {
   const dir = path.resolve(parameters.dir)
   const proxyTarget = new URL(parameters.proxyTarget)
 
@@ -202,7 +217,6 @@ function createProxyStaticFirstServer(app: express.Express, parameters: typeof d
     xfwd: false,
     autoRewrite: true,
     protocolRewrite: parameters.https ? 'https' : 'http',
-    logLevel: 'warn',
     on: {
       proxyReq(proxyReq, req) {
         normalizeProxyRequest(proxyReq, req, proxyTarget.origin, proxyTarget.host, false)
@@ -223,7 +237,11 @@ function createProxyStaticFirstServer(app: express.Express, parameters: typeof d
   app.use((req, res, next) => proxy(req, res, next))
 
   const server = createHttpOrHttpsServer(app, parameters, port)
-  server.on('upgrade', (req, socket, head) => proxy.upgrade(req, socket, head))
+  server.on('upgrade', (req, socket, head) => {
+    if (socket instanceof Socket) {
+      proxy.upgrade(req, socket, head)
+    }
+  })
 
   console.log(`Serving dir [${parameters.dir}]`)
   console.log('')
@@ -262,7 +280,7 @@ function rewriteReferer(value: string | undefined, targetOrigin: string): string
   }
 }
 
-function createHttpOrHttpsServer(app: express.Express, parameters: typeof defaultArguments, port: number) {
+function createHttpOrHttpsServer(app: express.Express, parameters: ResolvedCliArg, port: number) {
   if (!parameters.https) {
     const server = http.createServer(app)
     server.listen(port)
