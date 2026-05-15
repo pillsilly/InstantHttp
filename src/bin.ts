@@ -60,7 +60,7 @@ export function main() {
   }
 }
 
+/* c8 ignore next 3 */
 if (require.main === module) {
   main()
 }
-
