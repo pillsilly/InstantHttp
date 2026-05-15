@@ -8,7 +8,7 @@
     "testpack": "rm ./tmp/* -rf &&  npm pack --pack-destination=./tmp",
     "test": "npx jest --debug",
     "lint": "tsc --noEmit && eslint",
-    "build:dts": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist",
+    "build:dts": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist --rootDir src",
     "compile:prod": "rm -rf dist/* && npx tsup && npm run build:dts && ls -lha dist",
     "prerelease": "npm run compile:prod",
     "release": "npx release-it",
