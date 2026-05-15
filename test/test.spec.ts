@@ -50,6 +50,39 @@ describe('run', function () {
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Incoming request:'))
   })
 
+  it.each(['abc', '-1'])('should reject invalid port %s', function (port) {
+    expect(() => {
+      run({port, dir: makeTempDir()} as any)
+    }).toThrow(`Invalid port: ${port}`)
+  })
+
+  it('should use the default port when port is omitted', function () {
+    expect(() => {
+      run({port: undefined, dir: '/non_existent_directory_12345'} as any)
+    }).toThrow('Dir [/non_existent_directory_12345] does not exit')
+  })
+
+  it('should log uncaught exceptions', function () {
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+    const dir = makeTempDir()
+    const server = run({port: '0', dir} as any)
+    activeServers.push(server)
+
+    const handler = process
+      .listeners('uncaughtException')
+      .find(listener => String(listener).includes('EACCES error(lack of permission)'))
+
+    expect(handler).toBeDefined()
+
+    ;(handler as (err: Error & {code?: string}) => void)(Object.assign(new Error('denied'), {code: 'EACCES'}))
+    ;(handler as (err: Error & {code?: string}) => void)(Object.assign(new Error('boom'), {code: 'OTHER'}))
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      'EACCES error(lack of permission), use "run as Administrator" when you try to start the program'
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith('Caught exception: ', expect.any(Error))
+  })
+
   describe('legacy proxy mode', function () {
     it('should forward request /api/abc to proxyTarget http://localhost:9091', async function () {
       const upstream = await startHttpUpstream((req, res) => {
@@ -89,9 +122,33 @@ describe('run', function () {
 
       expect(response.text).toContain('<h2>Current Dir:')
     })
+
+    it('should return 404 for missing paths', async function () {
+      const dir = makeTempDir()
+      const server = run({
+        port: '0',
+        dir
+      } as any)
+      activeServers.push(server)
+
+      const response = await request(server).get('/missing-route').expect(404)
+
+      expect(response.text).toContain(`resource not found: ${path.resolve(`${dir}/missing-route`)}`)
+    })
   })
 
   describe('proxyStaticFileWise mode', function () {
+    it('should reject missing static directories', function () {
+      expect(() => {
+        run({
+          port: '0',
+          dir: '/non_existent_directory_12345',
+          proxyStaticFileWise: true,
+          proxyTarget: 'http://127.0.0.1:1'
+        } as any)
+      }).toThrow('Dir [/non_existent_directory_12345] does not exit')
+    })
+
     it('should serve static files locally before proxying', async function () {
       const staticDir = makeStaticFixture({
         'login.html': '<html><body>local login</body></html>',
@@ -202,6 +259,14 @@ describe('run', function () {
       expect(upstreamCalls[0].headers['x-forwarded-for']).toBeUndefined()
       expect(upstreamCalls[0].headers.via).toBeUndefined()
       expect(upstreamCalls[0].body).toBe('{"login":"Nemuadmin","token":"nemuuser"}')
+
+      await request(server)
+        .get('/InvalidRefererRequest')
+        .set('Referer', 'not a url')
+        .expect(200)
+
+      expect(upstreamCalls).toHaveLength(2)
+      expect(upstreamCalls[1].headers.referer).toBe('not a url')
     })
 
     it('should rewrite upstream redirects to the proxy origin', async function () {
@@ -263,9 +328,43 @@ describe('run', function () {
       expect(wsState.upgradeUrl).toBe('/websocket')
       expect(wsState.messages).toContain('ping')
     })
+
+    it('should fail when HTTPS certificate files are unavailable', function () {
+      const dir = makeTempDir()
+      jest.spyOn(fs, 'existsSync').mockImplementation(candidate => candidate === dir)
+
+      expect(() => {
+        run({
+          port: '0',
+          dir,
+          proxyStaticFileWise: true,
+          proxyTarget: 'http://127.0.0.1:1234',
+          https: true
+        } as any)
+      }).toThrow('Unable to find server.key')
+    })
   })
 
   describe('HTTPS listener', function () {
+    it('should serve the legacy server over HTTPS when enabled', async function () {
+      const staticDir = makeStaticFixture({
+        'index.html': '<html><body>legacy https</body></html>'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        https: true,
+        httpsKey: path.resolve(__dirname, '..', 'server.key'),
+        httpsCert: path.resolve(__dirname, '..', 'server.cert')
+      } as any)
+      activeServers.push(server)
+      const proxyPort = await getServerPort(server)
+
+      const body = await httpsGet(proxyPort, '/')
+
+      expect(body).toContain('legacy https')
+    })
+
     it('should serve the proxy over HTTPS when enabled', async function () {
       const staticDir = makeStaticFixture({
         'login.html': '<html><body>local login</body></html>'
@@ -290,6 +389,26 @@ describe('run', function () {
       const body = await httpsGet(proxyPort, '/')
 
       expect(body).toContain('local login')
+    })
+  })
+
+  describe('SPA mode', function () {
+    it('should fall back to index.html for missing routes', async function () {
+      const staticDir = makeStaticFixture({
+        'index.html': '<html><body>spa index</body></html>',
+        'assets/app.js': 'console.log("spa")'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        mode: 'SPA',
+        indexFile: 'index.html'
+      } as any)
+      activeServers.push(server)
+
+      const response = await request(server).get('/missing-route').expect(200)
+
+      expect(response.text).toContain('spa index')
     })
   })
 })
