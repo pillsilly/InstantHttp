@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["test/test-import.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  }
+}

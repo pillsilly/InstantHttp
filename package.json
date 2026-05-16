@@ -8,7 +8,7 @@
     "testpack": "rm ./tmp/* -rf &&  npm pack --pack-destination=./tmp",
     "test": "npx jest --debug",
     "lint": "tsc --noEmit && eslint",
-    "build:dts": "tsc -p tsconfig.json --emitDeclarationOnly --outDir dist --rootDir src",
+    "check:types": "tsc -p tsconfig.check-types.json --noEmit",
     "compile:prod": "rm -rf dist/* && npx tsup && ls -lha dist",
     "prerelease": "npm run compile:prod",
     "release": "npx release-it",
@@ -57,8 +57,6 @@
   ],
   "homepage": "https://github.com/pillsilly/InstantHttp",
   "devDependencies": {
-    "@babel/preset-env": "7.29.2",
-    "@babel/preset-typescript": "7.28.5",
     "@eslint/eslintrc": "3.3.5",
     "@eslint/js": "9.39.2",
     "@types/compression": "1.8.1",
