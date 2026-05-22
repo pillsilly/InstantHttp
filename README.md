@@ -104,6 +104,16 @@ instant_http --dir ./public --proxyTarget http://localhost:3001 --proxyPattern /
 instant_http --proxyStaticFileWise --proxyTarget http://localhost:5173
 ```
 
+Static-first rules, in short:
+
+- `GET`/`HEAD` requests are served from `--dir` when the requested file exists; otherwise they are proxied.
+- Other methods (`POST`, `PUT`, etc.) are normally proxied.
+- Special case: if a non-`GET` request targets a real local file, InstantHttp first forwards the request to `--proxyTarget` for backend side effects, then returns the local file to the browser.
+- This supports apps where a backend consumes query/body state during a document handoff, but the browser should still run the local build artifact.
+- WebSocket upgrades are forwarded to `--proxyTarget` so live data channels keep working.
+
+Example: if `./public/app-shell.html` exists and the browser sends `POST /app-shell.html?token=abc`, the backend receives that `POST`, while the browser receives local `./public/app-shell.html`.
+
 Proxy headers (`x-forwarded-for`, `x-forwarded-host`, `x-forwarded-proto`, `via`) are stripped from upstream requests to avoid proxy detection. The `referer` and `origin` headers are rewritten to match the target.
 
 ## HTTPS

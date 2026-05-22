@@ -2,7 +2,7 @@ import path from 'path'
 import http from 'http'
 import https from 'https'
 import {Socket} from 'net'
-import express, {Request} from 'express'
+import express, {Request, Response} from 'express'
 import cors from 'cors'
 import fs from 'fs'
 import compression from 'compression'
@@ -216,6 +216,7 @@ function createProxyStaticFirstServer(app: express.Express, parameters: Resolved
     ws: true,
     xfwd: false,
     autoRewrite: true,
+    cookieDomainRewrite: '',
     protocolRewrite: parameters.https ? 'https' : 'http',
     on: {
       proxyReq(proxyReq, req) {
@@ -223,10 +224,19 @@ function createProxyStaticFirstServer(app: express.Express, parameters: Resolved
       },
       proxyReqWs(proxyReq, req) {
         normalizeProxyRequest(proxyReq, req, proxyTarget.origin, proxyTarget.host, true)
+        logWebSocketProxyTraffic(req, parameters.quiet)
+      },
+      open() {
+        logDebug(parameters.quiet, '[ws-proxy-open] upstream websocket connected')
+      },
+      close() {
+        logDebug(parameters.quiet, '[ws-proxy-close] websocket closed')
       }
     }
   })
 
+  app.use(createRequestLogger(parameters.quiet))
+  app.use(createLocalFileProxySideEffectHandler(dir, proxyTarget, parameters.quiet))
   app.use(
     express.static(dir, {
       index: parameters.indexFile,
@@ -234,13 +244,15 @@ function createProxyStaticFirstServer(app: express.Express, parameters: Resolved
     })
   )
 
-  app.use((req, res, next) => proxy(req, res, next))
+  app.use((req, res, next) => {
+    logProxyTraffic(req, parameters.quiet)
+    proxy(req, res, next)
+  })
 
   const server = createHttpOrHttpsServer(app, parameters, port)
   server.on('upgrade', (req, socket, head) => {
-    if (socket instanceof Socket) {
-      proxy.upgrade(req, socket, head)
-    }
+    logDebug(parameters.quiet, `[ws-upgrade] ${req.method} ${req.url}`)
+    proxy.upgrade(req, socket as Socket, head)
   })
 
   console.log(`Serving dir [${parameters.dir}]`)
@@ -250,6 +262,201 @@ function createProxyStaticFirstServer(app: express.Express, parameters: Resolved
   console.log('')
 
   return server
+}
+
+function logDebug(quiet: boolean, message: string) {
+  if (!quiet) console.log(message)
+}
+
+function logProxyTraffic(req: Pick<Request, 'method' | 'originalUrl' | 'headers'>, quiet: boolean) {
+  if (quiet) return
+
+  console.log(`[proxy-forward] ${req.method} ${req.originalUrl}`)
+  console.log(
+    `[proxy-forward] headers ${JSON.stringify({
+      host: req.headers.host,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      cookie: req.headers.cookie,
+      'content-type': req.headers['content-type']
+    })}`
+  )
+}
+
+function logWebSocketProxyTraffic(req: Pick<http.IncomingMessage, 'method' | 'url' | 'headers'>, quiet: boolean) {
+  if (quiet) return
+
+  console.log(`[ws-proxy-forward] ${req.method} ${req.url}`)
+  console.log(
+    `[ws-proxy-forward] headers ${JSON.stringify({
+      host: req.headers.host,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+      cookie: req.headers.cookie,
+      upgrade: req.headers.upgrade,
+      connection: req.headers.connection
+    })}`
+  )
+}
+
+function createRequestLogger(quiet: boolean) {
+  return (req: Request, res: Response, next: express.NextFunction) => {
+    if (!quiet) {
+      console.log(`[request] ${req.method} ${req.originalUrl}`)
+      res.on('finish', () => {
+        console.log(`[response] ${req.method} ${req.originalUrl} ${res.statusCode}`)
+      })
+    }
+
+    next()
+  }
+}
+
+function createLocalFileProxySideEffectHandler(dir: string, proxyTarget: URL, quiet: boolean) {
+  return (req: Request, res: Response, next: express.NextFunction) => {
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      next()
+      return
+    }
+
+    const localFile = resolveLocalFileRequest(dir, req.originalUrl)
+    if (!localFile) {
+      next()
+      return
+    }
+
+    forwardProxySideEffect(req, res, proxyTarget, quiet, () => {
+      sendLocalFile(res, localFile)
+    })
+  }
+}
+
+function sendLocalFile(res: Response, localFile: string) {
+  const stat = fs.statSync(localFile)
+
+  res.status(200)
+  res.setHeader('content-length', stat.size)
+  res.setHeader('content-type', getContentType(localFile))
+  fs.createReadStream(localFile).pipe(res)
+}
+
+function getContentType(filePath: string): string {
+  switch (path.extname(filePath).toLowerCase()) {
+    case '.html':
+    case '.htm':
+      return 'text/html; charset=UTF-8'
+    case '.js':
+      return 'text/javascript; charset=UTF-8'
+    case '.css':
+      return 'text/css; charset=UTF-8'
+    case '.json':
+      return 'application/json; charset=UTF-8'
+    default:
+      return 'application/octet-stream'
+  }
+}
+
+function resolveLocalFileRequest(dir: string, originalUrl: string): string | undefined {
+  let pathname: string
+
+  try {
+    pathname = decodeURIComponent(new URL(originalUrl, 'http://localhost').pathname)
+  } catch {
+    return undefined
+  }
+
+  const localPath = path.resolve(dir, `.${pathname}`)
+  const relativePath = path.relative(dir, localPath)
+
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    return undefined
+  }
+
+  try {
+    const stat = fs.statSync(localPath)
+    /* c8 ignore next 3 -- directory fallthrough is covered by tests, but v8/esbuild does not attribute this branch reliably */
+    if (!stat.isFile()) {
+      return undefined
+    }
+
+    return localPath
+  } catch {
+    return undefined
+  }
+}
+
+function forwardProxySideEffect(req: Request, res: Response, proxyTarget: URL, quiet: boolean, onSuccess: () => void) {
+  const targetUrl = new URL(req.originalUrl, proxyTarget.origin)
+  const headers = createProxySideEffectHeaders(req, proxyTarget)
+  const transport = targetUrl.protocol === 'https:' ? https : http
+
+  const upstreamReq = transport.request(
+    targetUrl,
+    {
+      method: req.method,
+      headers,
+      rejectUnauthorized: false
+    },
+    upstreamRes => {
+      const statusCode = upstreamRes.statusCode!
+      const setCookie = upstreamRes.headers['set-cookie']
+
+      if (setCookie) {
+        const rewrittenSetCookie = rewriteSetCookieDomain(setCookie)
+        logDebug(quiet, `[proxy-side-effect] set-cookie ${JSON.stringify(rewrittenSetCookie)}`)
+        res.setHeader('set-cookie', rewrittenSetCookie)
+      }
+
+      logDebug(quiet, `[proxy-side-effect] ${req.method} ${req.originalUrl} -> ${statusCode}`)
+
+      if (statusCode < 200 || statusCode >= 300) {
+        res.status(statusCode)
+        copyProxyResponseHeaders(upstreamRes.headers, res)
+        upstreamRes.pipe(res)
+        return
+      }
+
+      upstreamRes.resume()
+      upstreamRes.on('end', onSuccess)
+    }
+  )
+
+  upstreamReq.on('error', error => {
+    if (!res.headersSent) {
+      res.status(502).send(`proxy side effect failed: ${error.message}`)
+    }
+  })
+
+  req.pipe(upstreamReq)
+}
+
+function rewriteSetCookieDomain(value: string[]): string[] {
+  return value.map(cookie => cookie.replace(/;\s*domain=[^;]*/ig, ''))
+}
+
+function createProxySideEffectHeaders(req: Request, proxyTarget: URL): http.OutgoingHttpHeaders {
+  const headers: http.OutgoingHttpHeaders = {...req.headers}
+  headers.host = proxyTarget.host
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    headers.origin = proxyTarget.origin
+  }
+
+  headers.referer = rewriteReferer(req.headers.referer, proxyTarget.origin) || `${proxyTarget.origin}/`
+
+  for (const header of PROXY_FINGERPRINT_HEADERS) {
+    delete headers[header]
+  }
+
+  return headers
+}
+
+function copyProxyResponseHeaders(headers: http.IncomingHttpHeaders, res: Response) {
+  for (const [header, value] of Object.entries(headers)) {
+    if (value !== undefined && header !== 'transfer-encoding' && header !== 'set-cookie') {
+      res.setHeader(header, value)
+    }
+  }
 }
 
 function normalizeProxyRequest(proxyReq: any, req: any, targetOrigin: string, targetHost: string, forceOrigin: boolean) {
