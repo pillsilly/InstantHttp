@@ -269,6 +269,252 @@ describe('run', function () {
       expect(upstreamCalls[1].headers.referer).toBe('not a url')
     })
 
+    it('should only log proxy traffic when quiet is false', async function () {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+      const staticDir = makeStaticFixture({'login.html': '<html><body>local login</body></html>'})
+      const upstream = await startHttpUpstream((req, res) => {
+        res.statusCode = 200
+        res.end(`upstream:${req.url}`)
+      })
+
+      const quietServer = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url,
+        quiet: true
+      } as any)
+      activeServers.push(quietServer)
+
+      await request(quietServer).get('/VersionRequest').expect(200)
+
+      expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('[proxy-forward]'))
+
+      consoleLogSpy.mockClear()
+
+      const verboseServer = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url,
+        quiet: false
+      } as any)
+      activeServers.push(verboseServer)
+
+      await request(verboseServer).get('/VersionRequest').expect(200)
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('[proxy-forward] GET /VersionRequest')
+    })
+
+    it('should forward non-GET local file requests upstream and serve the local file', async function () {
+      const upstreamCalls: Array<{
+        url: string
+        method: string
+        headers: http.IncomingHttpHeaders
+        body: string
+      }> = []
+
+      const upstream = await startHttpUpstream((req, res) => {
+        let body = ''
+        req.setEncoding('utf8')
+        req.on('data', chunk => {
+          body += chunk
+        })
+        req.on('end', () => {
+          upstreamCalls.push({
+            url: req.url ?? '',
+            method: req.method ?? '',
+            headers: req.headers,
+            body
+          })
+          res.statusCode = 200
+          res.setHeader('set-cookie', 'sid=abc; Domain=localhost; Path=/')
+          res.end('<html><body>upstream admin</body></html>')
+        })
+      })
+
+      const staticDir = makeStaticFixture({
+        'login.html': '<html><body>local login</body></html>',
+        'ADMIN.html': '<html><body>local admin</body></html>',
+        'folder/file.txt': 'nested file'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url
+      } as any)
+      activeServers.push(server)
+      const proxyPort = await getServerPort(server)
+
+      const response = await request(server)
+        .post('/ADMIN.html?authorization=token-123')
+        .set('Origin', `http://127.0.0.1:${proxyPort}`)
+        .set('Referer', `http://127.0.0.1:${proxyPort}/`)
+        .set('Content-Type', 'application/x-www-form-urlencoded')
+        .send('httpSessionId=123')
+        .expect(200)
+
+      expect(response.text).toContain('local admin')
+      expect(response.text).not.toContain('upstream admin')
+      expect(response.headers['set-cookie']).toEqual(['sid=abc; Path=/'])
+      expect(response.headers['content-type']).toContain('text/html')
+      expect(response.headers['content-length']).toBe(String('<html><body>local admin</body></html>'.length))
+      expect(upstreamCalls).toHaveLength(1)
+      expect(upstreamCalls[0].url).toBe('/ADMIN.html?authorization=token-123')
+      expect(upstreamCalls[0].method).toBe('POST')
+      expect(upstreamCalls[0].headers.host).toBe(upstream.hostHeader)
+      expect(upstreamCalls[0].headers.origin).toBe(upstream.origin)
+      expect(upstreamCalls[0].headers.referer).toBe(`${upstream.origin}/`)
+      expect(upstreamCalls[0].body).toBe('httpSessionId=123')
+    })
+
+    it.each([
+      ['script.js', 'text/javascript', 'console.log("local")'],
+      ['style.css', 'text/css', 'body { color: red; }'],
+      ['data.json', 'application/json', '{"local":true}'],
+      ['asset.bin', 'application/octet-stream', 'local-binary']
+    ])('should serve local %s content after upstream side effect', async function (fileName, contentType, content) {
+      const upstreamCalls: string[] = []
+      const upstream = await startHttpUpstream((req, res) => {
+        upstreamCalls.push(req.url ?? '')
+        res.statusCode = 204
+        res.end()
+      })
+
+      const staticDir = makeStaticFixture({
+        'login.html': '<html><body>local login</body></html>',
+        [fileName]: content
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url
+      } as any)
+      activeServers.push(server)
+
+      const response = await request(server).post(`/${fileName}?sideEffect=1`).expect(200)
+
+      const body = response.text ?? (Buffer.isBuffer(response.body) ? response.body.toString() : JSON.stringify(response.body))
+      expect(body).toBe(content)
+      expect(response.headers['content-type']).toContain(contentType)
+      expect(upstreamCalls).toEqual([`/${fileName}?sideEffect=1`])
+    })
+
+    it('should proxy non-GET requests that do not resolve to local files', async function () {
+      const upstreamCalls: string[] = []
+      const upstream = await startHttpUpstream((req, res) => {
+        upstreamCalls.push(req.url ?? '')
+        res.statusCode = 200
+        res.end(`upstream:${req.url}`)
+      })
+
+      const staticDir = makeStaticFixture({
+        'login.html': '<html><body>local login</body></html>',
+        'ADMIN.html': '<html><body>local admin</body></html>'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url
+      } as any)
+      activeServers.push(server)
+
+      await request(server).post('/missing.html').expect(200, 'upstream:/missing.html')
+      await request(server).post('/%2e%2e%2fADMIN.html').expect(200)
+      await request(server).post('/folder').expect(200, 'upstream:/folder')
+      await request(server).post('/%E0%A4%A').expect(200)
+
+      expect(upstreamCalls).toEqual(['/missing.html', '/%2e%2e%2fADMIN.html', '/folder', '/%E0%A4%A'])
+    })
+
+    it('should return upstream errors for non-GET local file side effects', async function () {
+      const upstream = await startHttpUpstream((_req, res) => {
+        res.statusCode = 401
+        res.setHeader('x-upstream-error', 'denied')
+        res.setHeader('transfer-encoding', 'chunked')
+        res.setHeader('set-cookie', 'sid=denied; Domain=localhost; Path=/')
+        res.end('denied by upstream')
+      })
+
+      const staticDir = makeStaticFixture({
+        'login.html': '<html><body>local login</body></html>',
+        'ADMIN.html': '<html><body>local admin</body></html>'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url
+      } as any)
+      activeServers.push(server)
+
+      const response = await request(server).post('/ADMIN.html?authorization=bad-token').expect(401)
+
+      expect(response.text).toBe('denied by upstream')
+      expect(response.headers['x-upstream-error']).toBe('denied')
+      expect(response.headers['set-cookie']).toEqual(['sid=denied; Path=/'])
+    })
+
+    it('should return 502 when local file side effect forwarding fails', async function () {
+      const deadServer = http.createServer()
+      await listen(deadServer)
+      const deadPort = getAddressPort(deadServer)
+      await closeServer(deadServer)
+
+      const staticDir = makeStaticFixture({
+        'login.html': '<html><body>local login</body></html>',
+        'ADMIN.html': '<html><body>local admin</body></html>'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: `http://127.0.0.1:${deadPort}`
+      } as any)
+      activeServers.push(server)
+
+      const response = await request(server).post('/ADMIN.html?authorization=token-123').expect(502)
+
+      expect(response.text).toContain('proxy side effect failed:')
+    })
+
+    it('should forward local file side effects to HTTPS upstreams', async function () {
+      const upstreamCalls: string[] = []
+      const upstream = await startHttpsUpstream((req, res) => {
+        upstreamCalls.push(req.url ?? '')
+        res.statusCode = 204
+        res.end()
+      })
+
+      const staticDir = makeStaticFixture({
+        'login.html': '<html><body>local login</body></html>',
+        'ADMIN.html': '<html><body>local admin</body></html>'
+      })
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url
+      } as any)
+      activeServers.push(server)
+
+      const response = await request(server).post('/ADMIN.html?authorization=token-123').expect(200)
+
+      expect(response.text).toContain('local admin')
+      expect(upstreamCalls).toEqual(['/ADMIN.html?authorization=token-123'])
+    })
+
     it('should rewrite upstream redirects to the proxy origin', async function () {
       let upstreamUrl = ''
       const upstream = await startHttpUpstream((req, res) => {
@@ -295,6 +541,7 @@ describe('run', function () {
     })
 
     it('should forward websocket upgrades', async function () {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
       const wsState = {
         messages: [] as string[],
         upgradeUrl: ''
@@ -307,7 +554,8 @@ describe('run', function () {
         dir: staticDir,
         indexFile: 'login.html',
         proxyStaticFileWise: true,
-        proxyTarget: upstream.url
+        proxyTarget: upstream.url,
+        quiet: false
       } as any)
       activeServers.push(server)
       const proxyPort = await getServerPort(server)
@@ -327,6 +575,43 @@ describe('run', function () {
 
       expect(wsState.upgradeUrl).toBe('/websocket')
       expect(wsState.messages).toContain('ping')
+      expect(consoleLogSpy).toHaveBeenCalledWith('[ws-upgrade] GET /websocket')
+      expect(consoleLogSpy).toHaveBeenCalledWith('[ws-proxy-forward] GET /websocket')
+    })
+
+    it('should suppress websocket proxy logs when quiet is true', async function () {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+      const wsState = {
+        messages: [] as string[],
+        upgradeUrl: ''
+      }
+
+      const upstream = await startWebSocketUpstream(wsState)
+      const staticDir = makeStaticFixture({'login.html': '<html><body>local login</body></html>'})
+      const server = run({
+        port: '0',
+        dir: staticDir,
+        indexFile: 'login.html',
+        proxyStaticFileWise: true,
+        proxyTarget: upstream.url,
+        quiet: true
+      } as any)
+      activeServers.push(server)
+      const proxyPort = await getServerPort(server)
+
+      await new Promise<void>((resolve, reject) => {
+        const socket = new WebSocket(`ws://127.0.0.1:${proxyPort}/websocket`)
+        socket.on('open', () => {
+          socket.send('ping')
+        })
+        socket.on('message', () => {
+          socket.close()
+          resolve()
+        })
+        socket.on('error', reject)
+      })
+
+      expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('[ws-proxy-forward]'))
     })
 
     it('should fail when HTTPS certificate files are unavailable', function () {
@@ -471,6 +756,28 @@ async function startHttpUpstream(
   }
 }
 
+async function startHttpsUpstream(
+  handler: http.RequestListener
+): Promise<{server: https.Server, url: string, origin: string, hostHeader: string}> {
+  const server = https.createServer(
+    {
+      key: fs.readFileSync(path.resolve(__dirname, '..', 'server.key')),
+      cert: fs.readFileSync(path.resolve(__dirname, '..', 'server.cert'))
+    },
+    handler
+  )
+  await listen(server)
+  activeServers.push(server)
+  const port = getAddressPort(server)
+
+  return {
+    server,
+    url: `https://127.0.0.1:${port}`,
+    origin: `https://127.0.0.1:${port}`,
+    hostHeader: `127.0.0.1:${port}`
+  }
+}
+
 async function startWebSocketUpstream(state: {messages: string[], upgradeUrl: string}) {
   const server = http.createServer()
   const wss = new WebSocketServer({noServer: true})
@@ -500,7 +807,7 @@ async function startWebSocketUpstream(state: {messages: string[], upgradeUrl: st
   }
 }
 
-async function listen(server: http.Server): Promise<void> {
+async function listen(server: http.Server | https.Server): Promise<void> {
   if (server.listening) return
 
   await new Promise<void>((resolve, reject) => {
@@ -512,7 +819,7 @@ async function listen(server: http.Server): Promise<void> {
   })
 }
 
-function getAddressPort(server: http.Server): number {
+function getAddressPort(server: http.Server | https.Server): number {
   const address = server.address()
   if (!address || typeof address === 'string') {
     throw new Error('server did not start listening')

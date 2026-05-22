@@ -14,3 +14,4 @@ executable
 *.tgz
 package-lock.json
 .claude/settings.json
+.tmp
