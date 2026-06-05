@@ -7,6 +7,8 @@
 
 Serves a local directory over HTTP, proxies requests to a backend, or does both in static-first hybrid mode. Ships as an npm package, a CLI, or a standalone binary.
 
+> **Development use only.** InstantHttp prioritizes convenience and iteration speed over security hardening. Not designed for production — no rate limiting, no auth, no hardening. Use in local dev, CI, and staging environments only.
+
 ## Why
 
 Frontend development means serving built artifacts against a backend you don't control — a staging API, a production backend, or a colleague's dev server. Writing a throwaway Express script each time, wiring up CORS, compression, and a proxy middleware is boilerplate that adds nothing to your actual work.
