@@ -1,11 +1,12 @@
 # InstantHttp
 
-> Static file server & reverse proxy with optional HTTPS — zero config, single binary.
-
+> 
+[![DeepWiki](https://img.shields.io/badge/Wiki-DeepWiki-blue)](YOUR_DEEPWIKI_URL) 
 [![npm version](https://img.shields.io/npm/v/instantly_http)](https://www.npmjs.com/package/instantly_http)
 [![license](https://img.shields.io/npm/l/instantly_http)](https://github.com/pillsilly/InstantHttp/blob/master/LICENSE)
 
-Serves a local directory over HTTP, proxies requests to a backend, or does both in static-first hybrid mode. Ships as an npm package, a CLI, or a standalone binary.
+Static file server & reverse proxy with optional HTTPS — zero config, single binary.
+It serves a local directory over HTTP, proxies requests to a backend, or does both in static-first hybrid mode. 
 
 > **Development use only.** InstantHttp prioritizes convenience and iteration speed over security hardening. Not designed for production — no rate limiting, no auth, no hardening. Use in local dev, CI, and staging environments only.
 
