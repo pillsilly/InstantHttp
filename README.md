@@ -1,7 +1,7 @@
 # InstantHttp
 
 > 
-[![DeepWiki](https://img.shields.io/badge/Wiki-DeepWiki-blue)](YOUR_DEEPWIKI_URL) 
+[![DeepWiki](https://img.shields.io/badge/Wiki-DeepWiki-blue)](https://deepwiki.com/pillsilly/InstantHttp) 
 [![npm version](https://img.shields.io/npm/v/instantly_http)](https://www.npmjs.com/package/instantly_http)
 [![license](https://img.shields.io/npm/l/instantly_http)](https://github.com/pillsilly/InstantHttp/blob/master/LICENSE)
 
