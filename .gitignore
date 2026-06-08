@@ -15,3 +15,5 @@ executable
 package-lock.json
 .claude/settings.json
 .tmp
+.VSCodeCounter
+out
