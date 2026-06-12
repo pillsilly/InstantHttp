@@ -4,8 +4,8 @@ import https from 'https'
 import {Socket} from 'net'
 import express, {Request, Response} from 'express'
 import cors from 'cors'
-import zlib from 'zlib'
 import fs from 'fs'
+import compression from 'compression'
 
 import {createProxyMiddleware} from 'http-proxy-middleware'
 
@@ -118,45 +118,11 @@ function validateArguments(parameters: ResolvedCliArg) {
   }
 }
 
-function createCompressionMiddleware() {
-  const threshold = 1024
-
-  return function compressionMw(req: any, res: any, next: any) {
-    const accept = req.headers['accept-encoding'] || ''
-    const encoding = accept.includes('br') ? 'br' : accept.includes('gzip') ? 'gzip' : null
-    if (!encoding) return next()
-
-    const chunks: Buffer[] = []
-    const _end = res.end.bind(res)
-
-    res.write = function (chunk: any) {
-      if (chunk) chunks.push(Buffer.from(chunk))
-      return true
-    }
-
-    res.end = function (chunk: any) {
-      if (chunk) chunks.push(Buffer.from(chunk))
-      const body = Buffer.concat(chunks as any)
-
-      if (body.length < threshold) return _end(body)
-
-      const compressed = encoding === 'br'
-        ? zlib.brotliCompressSync(body as any)
-        : zlib.gzipSync(body as any)
-      res.setHeader('Content-Encoding', encoding)
-      res.setHeader('Content-Length', String(compressed.length))
-      _end(compressed)
-    }
-
-    next()
-  }
-}
-
 function createLegacyServer(app: express.Express, parameters: ResolvedCliArg, port: number) {
   const dir = path.resolve(parameters.dir)
 
   app.use(cors())
-  app.use(createCompressionMiddleware())
+  app.use(compression())
 
   if (parameters.proxyTarget && parameters.proxyPattern) {
     const proxy = createProxyMiddleware({
@@ -308,9 +274,9 @@ function logProxyTraffic(req: Pick<Request, 'method' | 'originalUrl' | 'headers'
   console.log(`[proxy-forward] ${req.method} ${req.originalUrl}`)
   console.log(
     `[proxy-forward] headers ${JSON.stringify({
-      host: req.headers['host'],
-      origin: req.headers['origin'],
-      referer: req.headers['referer'],
+      host: req.headers.host,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
       cookie: req.headers.cookie,
       'content-type': req.headers['content-type']
     })}`
@@ -323,9 +289,9 @@ function logWebSocketProxyTraffic(req: Pick<http.IncomingMessage, 'method' | 'ur
   console.log(`[ws-proxy-forward] ${req.method} ${req.url}`)
   console.log(
     `[ws-proxy-forward] headers ${JSON.stringify({
-      host: req.headers['host'],
-      origin: req.headers['origin'],
-      referer: req.headers['referer'],
+      host: req.headers.host,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
       cookie: req.headers.cookie,
       upgrade: req.headers.upgrade,
       connection: req.headers.connection
@@ -470,13 +436,13 @@ function rewriteSetCookieDomain(value: string[]): string[] {
 
 function createProxySideEffectHeaders(req: Request, proxyTarget: URL): http.OutgoingHttpHeaders {
   const headers: http.OutgoingHttpHeaders = {...req.headers}
-  headers['host'] = proxyTarget.host
+  headers.host = proxyTarget.host
 
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    headers['origin'] = proxyTarget.origin
+    headers.origin = proxyTarget.origin
   }
 
-  headers['referer'] = rewriteReferer(req.headers['referer'], proxyTarget.origin) || `${proxyTarget.origin}/`
+  headers.referer = rewriteReferer(req.headers.referer, proxyTarget.origin) || `${proxyTarget.origin}/`
 
   for (const header of PROXY_FINGERPRINT_HEADERS) {
     delete headers[header]
