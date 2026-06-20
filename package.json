@@ -44,7 +44,7 @@
     "compression": "1.8.1",
     "cors": "2.8.6",
     "express": "5.2.1",
-    "http-proxy-middleware": "3.0.5"
+    "http-proxy-middleware": "3.0.7"
   },
   "keywords": [
     "http",
